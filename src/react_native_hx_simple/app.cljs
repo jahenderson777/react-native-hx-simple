@@ -28,6 +28,17 @@
                                     (println "here")
                                     (dispatch! [:db/assoc-in [:person/name] text]))}]]))
 
+(defnc Test []
+  (println "rerender")
+  [rn/TouchableOpacity {:style {:margin 13
+                                :padding 20
+                                
+                                :background-color "red"}
+                        
+                        :onPress (fn [] (firebase/listen "books" "123"
+                                                        #(db/dispatch [:db/assoc-in [:person/name] (:title %)])))}
+   [rn/Text {:style {:text-align "center"}} "Listen"]])
+
 (defnc App []
   [:provider db/provider
    [rn/View {:style {:padding 8}}
@@ -40,7 +51,8 @@
     [rn/Button {:onPress (fn [] (firebase/facebook-login!))
                 :title "Facebook login"}]
     [rn/Button {:onPress (fn [] (firebase/add!))
-                :title "Add document to firebase"}]]])
+                :title "Add document to firebase"}]
+    [Test]]])
 
 (defn start
   {:dev/after-load true}

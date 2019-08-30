@@ -39,8 +39,9 @@
       #js [sub])
     result))
 
-(defn useDispatch
-  []
+(defn useDispatch []
   (let [db (hooks/useContext context)]
-    (hooks/useCallback (fn [event]
-                         (swap! db (fn [db] (handle-event db event)))))))
+    (hooks/useCallback (fn [evt] (swap! db #(handle-event % evt))))))
+
+(defn dispatch [evt]
+  (swap! app-db #(handle-event % evt)))

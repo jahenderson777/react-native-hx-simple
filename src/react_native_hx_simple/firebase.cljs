@@ -16,13 +16,15 @@
 
 (defonce firebase-app (.initializeApp firebase firebase-config))
 
-(defn auth* [] (.auth firebase))
+(defn get-auth [] (.auth firebase))
+
+(defn get-db [] (.firestore firebase))
 
 (defn create-user! [email password]
-  (.createUserWithEmailAndPassword (auth*) email password))
+  (.createUserWithEmailAndPassword (get-auth) email password))
 
 (defn current-user []
-  (.-currentUser (auth*)))
+  (.-currentUser (get-auth)))
 
 (defn send-verification-email! []
   (.sendEmailVerification (current-user)))
@@ -31,10 +33,10 @@
   (.then (.logInWithReadPermissionsAsync facebook facebook-app-id)
          (fn [res errors]
            (let [_ (println errors ":" res)
-                 token (:token (js->clj res :keywordize-keys true))
+                 token (get (js->clj res) "token")
                  _ (println "token = " token)
                  cred (.auth.FacebookAuthProvider.credential firebase token)
-                 auth (auth*)]
+                 auth (get-auth)]
              (.then (.signInAndRetrieveDataWithCredential auth cred)
                     (fn [& v] (println v)))
              (.onAuthStateChanged auth (fn [user]
@@ -44,12 +46,24 @@
              (println res)))))
 
 (defn logout! []
-  (.signOut (auth*)))
+  (.signOut (get-auth)))
+
+(defn listen [coll-id doc-id on-snapshot]
+  (-> (get-db)
+      (.collection coll-id)
+      (.doc doc-id)
+      (.onSnapshot (fn [doc]
+                     (let [source (if (.. doc -metadata -hasPendingWrites)
+                                    "Local"
+                                    "Server")
+                           _ (println source)
+                           data (.data doc)]
+                       (on-snapshot (js->clj data :keywordize-keys true)))))))
 
 (defn add! []
   (let [coll-id "books"
         _ (println  (js/Object.getOwnPropertyNames firebase))
-        db (.firestore firebase)
+        db (get-db)
         _ (println "db: " db)
         _ (println  (js/Object.getOwnPropertyNames db))
         coll (.collection db coll-id)
