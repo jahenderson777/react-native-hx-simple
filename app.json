@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "description": "React Native Hx Simple Example",
+    "slug": "react-native-hx-simple",
+    "splash": {
+      "image": "./assets/images/splashscreen.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "sdkVersion": "34.0.0",
+    "name": "React Native Hx Simple Example",
+    "entryPoint": "./app/index.js",
+    "privacy": "public",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "version": "1.0.0",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "scheme": "exp249a1867f1424a209cdb51829c1e6c3d",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}
