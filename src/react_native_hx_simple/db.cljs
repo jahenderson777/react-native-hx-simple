@@ -7,24 +7,15 @@
 
 (def context (hx/create-context))
 
-(def provider
-  {:context context
-   :value app-db})
+(def provider {:context context
+               :value app-db})
 
 (defmulti subscription (fn [_ [k & _]] k))
 
-(defmethod subscription :db/get-in
-  [db [_ path]]
+(defmethod subscription :get-in [db [_ path]]
   (get-in db path))
 
-(defmulti handle-event (fn [db [type & _]] type))
-
-(defmethod handle-event :db/assoc-in
-  [db [_ path value]]
-  (assoc-in db path value))
-
-(defn useSubscription
-  [sub]
+(defn useSubscription [sub]
   (let [db (hooks/useContext context)
         [result updateResult] (react/useState (subscription @db sub))
         k (gensym)]
@@ -34,14 +25,9 @@
                           (let [new-result (subscription db sub)]
                             (when (not= new-result result)
                               (updateResult new-result)))))
-        (fn []
-          (remove-watch db k)))
+        #(remove-watch db k))
       #js [sub])
     result))
 
-(defn useDispatch []
-  (let [db (hooks/useContext context)]
-    (hooks/useCallback (fn [evt] (swap! db #(handle-event % evt))))))
-
-(defn dispatch [evt]
-  (swap! app-db #(handle-event % evt)))
+(defn ! [path val]
+  (swap! app-db assoc-in path val))
