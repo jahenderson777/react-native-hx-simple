@@ -3,7 +3,7 @@
    ["expo" :as ex]
    ["react-native" :as rn]
    ["react" :as react]
-   [react-native-hx-simple.db :as db]
+   [react-native-hx-simple.db :refer [!] :as db]
    [hx.react :as hx :refer [defnc]]
    [hx.hooks :as hooks]
    [shadow.expo :as expo]
@@ -11,13 +11,12 @@
 
 (defnc Greet []
   ;; use React Hooks for state management
-  (let [name (db/useSubscription [:db/get-in [:person/name]])
-        dispatch! (db/useDispatch)]
+  (let [name (db/useSubscription [:get-in [:person/name]])]
     [:<>
      [rn/Text (str "Name:" name)]
      [rn/Button {:onPress (fn []
                             (println "here2")
-                            (dispatch! [:db/assoc-in [:person/name] "sdhfkjshd"]))
+                            (! [:person/name] "sdhfkjshd"))
                  :title "aslkdjfj2"}]
      [rn/TextInput {:style {:borderWidth 2}
                     :showSoftInputOnFocus true
@@ -26,18 +25,15 @@
                     :value name
                     :onChangeText (fn [text]
                                     (println "here")
-                                    (dispatch! [:db/assoc-in [:person/name] text]))}]]))
+                                    (! [:person/name] text))}]]))
 
-(defnc Test []
-  (println "rerender")
+(defnc MyButton [text on-press]
   [rn/TouchableOpacity {:style {:margin 13
                                 :padding 20
-                                
                                 :background-color "red"}
-                        
-                        :onPress (fn [] (firebase/listen "books" "123"
-                                                        #(db/dispatch [:db/assoc-in [:person/name] (:title %)])))}
-   [rn/Text {:style {:text-align "center"}} "Listen"]])
+                        :onPress on-press}
+   [rn/Text {:style {:text-align "center"}} text]])
+
 
 (defnc App []
   [:provider db/provider
@@ -46,13 +42,14 @@
     [Greet]
     [Greet]
 
-    
-
     [rn/Button {:onPress (fn [] (firebase/facebook-login!))
                 :title "Facebook login"}]
     [rn/Button {:onPress (fn [] (firebase/add!))
                 :title "Add document to firebase"}]
-    [Test]]])
+    [MyButton "Create User"
+     (fn [] (firebase/create-user! "alexhenderson@riverford.co.uk" "Password1!"))]
+    [MyButton "Listen" (fn [] (firebase/listen "books" "123"
+                                              #(![:person/name] (:title %))))]]])
 
 (defn start
   {:dev/after-load true}
