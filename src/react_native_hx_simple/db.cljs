@@ -15,7 +15,7 @@
 (defmethod subscription :get-in [db [_ & path]]
   (get-in db path))
 
-(defn sub [sub-v]
+(defn sub [& sub-v]
   (let [db (hooks/useContext context)
         [result updateResult] (react/useState (subscription @db sub-v))
         k (gensym)]
@@ -29,5 +29,9 @@
       #js [sub-v])
     result))
 
-(defn ! [path val]
-  (swap! app-db assoc-in path val))
+(defn ! [& path-vals]
+  (swap! app-db (fn [db]
+                  (reduce (fn [db [path val]]
+                            (assoc-in db path val))
+                          db
+                          (partition 2 path-vals)))))

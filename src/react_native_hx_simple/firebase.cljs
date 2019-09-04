@@ -1,6 +1,5 @@
 (ns react-native-hx-simple.firebase
   (:require ["firebase" :as firebase]
-            ;["firebase/firestore" :as firestore]
             ["expo-facebook" :as facebook]))
 
 (js/require "firebase/firestore")
@@ -34,8 +33,8 @@
 (defn sign-in! [email password]
   (.signInWithEmailAndPassword (get-auth) email password))
 
-(defn logout! []
-  (.signOut (get-auth)))
+(defn logout! [on-signed-out]
+  (.then (.signOut (get-auth)) on-signed-out))
 
 (defn listen [coll-id doc-id on-snapshot]
   (-> (get-db)
@@ -50,13 +49,11 @@
            (fn [doc-ref]
              (println "doc written" doc-ref)))))
 
-(defn init! []
+(defn init! [on-auth-change]
   (.initializeApp firebase firebase-config)
   (.onAuthStateChanged (get-auth)
                        (fn [user]
                          (when user
-                           (println "auth state changed:" (.-displayName user) (.-email user) (.-emailVerified user))
-                           (swap! react-native-hx-simple.db/app-db assoc
-                                  :display-name (.-displayName user)
-                                  :email (.-email user)
-                                  :email-verified (.-emailVerified user))))))
+                           (on-auth-change {:name (.-displayName user)
+                                            :email (.-email user)
+                                            :email-verified (.-emailVerified user)})))))
