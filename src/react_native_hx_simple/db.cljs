@@ -12,21 +12,21 @@
 
 (defmulti subscription (fn [_ [k & _]] k))
 
-(defmethod subscription :get-in [db [_ path]]
+(defmethod subscription :get-in [db [_ & path]]
   (get-in db path))
 
-(defn useSubscription [sub]
+(defn sub [sub-v]
   (let [db (hooks/useContext context)
-        [result updateResult] (react/useState (subscription @db sub))
+        [result updateResult] (react/useState (subscription @db sub-v))
         k (gensym)]
     (hooks/useEffect
       (fn []
         (add-watch db k (fn [_ _ _ db]
-                          (let [new-result (subscription db sub)]
+                          (let [new-result (subscription db sub-v)]
                             (when (not= new-result result)
                               (updateResult new-result)))))
         #(remove-watch db k))
-      #js [sub])
+      #js [sub-v])
     result))
 
 (defn ! [path val]

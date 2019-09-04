@@ -14,8 +14,6 @@
        :storageBucket "tuber-f8698.appspot.com"
        :projectId "tuber-f8698"})
 
-(defonce firebase-app (.initializeApp firebase firebase-config))
-
 (defn get-auth [] (.auth firebase))
 
 (defn get-db [] (.firestore firebase))
@@ -23,22 +21,18 @@
 (defn create-user! [email password]
   (.createUserWithEmailAndPassword (get-auth) email password))
 
-(defn current-user []
-  (.-currentUser (get-auth)))
-
 (defn send-verification-email! []
-  (.. (get-auth) currentUser sendEmailVerification))
+  (.. (get-auth) -currentUser sendEmailVerification))
 
 (defn facebook-login! []
   (.then (.logInWithReadPermissionsAsync facebook facebook-app-id)
          (fn [res errors]
            (let [token (get (js->clj res) "token")
-                 cred (.auth.FacebookAuthProvider.credential firebase token)
-                 auth (get-auth)]
-             (.signInAndRetrieveDataWithCredential auth cred)
-             (.onAuthStateChanged auth (fn [user]
-                                         (println "auth state changed:" (.-displayName user))
-                                         (swap! react-native-hx-simple.db/app-db assoc :person/name (.-displayName user))))))))
+                 cred (.auth.FacebookAuthProvider.credential firebase token)]
+             (.signInAndRetrieveDataWithCredential (get-auth) cred)))))
+
+(defn sign-in! [email password]
+  (.signInWithEmailAndPassword (get-auth) email password))
 
 (defn logout! []
   (.signOut (get-auth)))
@@ -56,4 +50,13 @@
            (fn [doc-ref]
              (println "doc written" doc-ref)))))
 
-
+(defn init! []
+  (.initializeApp firebase firebase-config)
+  (.onAuthStateChanged (get-auth)
+                       (fn [user]
+                         (when user
+                           (println "auth state changed:" (.-displayName user) (.-email user) (.-emailVerified user))
+                           (swap! react-native-hx-simple.db/app-db assoc
+                                  :display-name (.-displayName user)
+                                  :email (.-email user)
+                                  :email-verified (.-emailVerified user))))))
