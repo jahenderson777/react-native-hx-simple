@@ -6,7 +6,8 @@
             [shadow.expo :as expo]
             [react-native-hx-simple.style :refer [s]]
             [react-native-hx-simple.db :refer [! sub] :as db]
-            [react-native-hx-simple.firebase :as fb]))
+            [react-native-hx-simple.firebase :as fb]
+            [react-native-hx-simple.local-storage]))
 
 (defnc Greet []
   (let [name (sub :get-in :user :name)]
