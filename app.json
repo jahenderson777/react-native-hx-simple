@@ -3,7 +3,7 @@
     "description": "React Native Hx Simple Example",
     "slug": "react-native-hx-simple",
     "splash": {
-      "image": "./assets/images/splashscreen.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

@@ -5,6 +5,7 @@
   {:target :react-native
    :init-fn react-native-hx-simple.app/init
    :output-dir "app"
+   ;:release {:compiler-options {:optimizations :simple}}
    :devtools {:autoload true
               ;:preloads [shadow.expo.keep-awake]
               }}}}

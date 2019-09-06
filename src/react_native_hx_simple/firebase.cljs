@@ -27,8 +27,10 @@
   (.then (.logInWithReadPermissionsAsync facebook facebook-app-id)
          (fn [res errors]
            (let [token (get (js->clj res) "token")
-                 cred (.auth.FacebookAuthProvider.credential firebase token)]
-             (.signInAndRetrieveDataWithCredential (get-auth) cred)))))
+                 auth (get-auth)
+                 facebook-auth-provider (.-FacebookAuthProvider auth)
+                 cred (.credential ^js facebook-auth-provider token)]
+             (.signInAndRetrieveDataWithCredential auth cred)))))
 
 (defn sign-in! [email password]
   (.signInWithEmailAndPassword (get-auth) email password))
@@ -47,7 +49,8 @@
         coll (.collection (get-db) coll-id)]
     (.then (.add coll (clj->js {:title "hap1"}))
            (fn [doc-ref]
-             (println "doc written" doc-ref)))))
+             ;(println "doc written" doc-ref)
+             ))))
 
 (defn init! [on-auth-change]
   (.initializeApp firebase firebase-config)
@@ -55,5 +58,6 @@
                        (fn [user]
                          (when user
                            (on-auth-change {:name (.-displayName user)
-                                            :email (.-email user)
-                                            :email-verified (.-emailVerified user)})))))
+                                            ;:email (.-email user)
+                                            ;:email-verified (.-emailVerified user)
+                                            })))))
