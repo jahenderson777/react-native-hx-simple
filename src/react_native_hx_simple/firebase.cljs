@@ -28,8 +28,8 @@
          (fn [res errors]
            (let [token (get (js->clj res) "token")
                  auth (get-auth)
-                 facebook-auth-provider (.-FacebookAuthProvider auth)
-                 cred (.credential ^js facebook-auth-provider token)]
+                 facebook-auth-provider (.. firebase -auth -FacebookAuthProvider)
+                 cred (.credential facebook-auth-provider token)]
              (.signInAndRetrieveDataWithCredential auth cred)))))
 
 (defn sign-in! [email password]
