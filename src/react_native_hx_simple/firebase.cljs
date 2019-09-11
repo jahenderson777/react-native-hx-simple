@@ -1,6 +1,7 @@
 (ns react-native-hx-simple.firebase
   (:require ["firebase" :as firebase]
-            ["expo-facebook" :as facebook]))
+            ["expo-facebook" :as facebook]
+            [react-native-hx-simple.util :as util]))
 
 (js/require "firebase/firestore")
 
@@ -27,10 +28,10 @@
   (.then (.logInWithReadPermissionsAsync facebook facebook-app-id)
          (fn [res errors]
            (let [token (get (js->clj res) "token")
-                 auth (get-auth)
                  facebook-auth-provider (.. firebase -auth -FacebookAuthProvider)
                  cred (.credential facebook-auth-provider token)]
-             (.signInAndRetrieveDataWithCredential auth cred)))))
+             (util/debug-js-obj facebook-auth-provider)
+             (.signInAndRetrieveDataWithCredential (get-auth) cred)))))
 
 (defn sign-in! [email password]
   (.signInWithEmailAndPassword (get-auth) email password))
@@ -58,6 +59,5 @@
                        (fn [user]
                          (when user
                            (on-auth-change {:name (.-displayName user)
-                                            ;:email (.-email user)
-                                            ;:email-verified (.-emailVerified user)
-                                            })))))
+                                            :email (.-email user)
+                                            :email-verified (.-emailVerified user)})))))
