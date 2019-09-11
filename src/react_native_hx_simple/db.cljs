@@ -1,9 +1,44 @@
 (ns react-native-hx-simple.db
   (:require [hx.react :as hx]
             [hx.hooks :as hooks]
+            ["react-native" :refer [Dimensions] :as rn]
             ["react" :as react]))
 
 (def app-db (atom {}))
+
+(def subscriptions (atom {}))
+
+(defn init! []
+  (add-watch app-db :subscribers
+             (fn [_ _ old-db db]
+               (println "watch called2")
+               (let [updates
+                     (mapcat (fn [[k update-fns]]
+                               (let [old-val (get old-db k)
+                                     new-val (get db k)]
+                                 (when (not= old-val new-val)
+                                   (for [f update-fns]
+                                     #(f new-val)))))
+                             @subscriptions)]
+                 (println "updates" updates)
+                 (when (seq updates)
+                   (rn/unstable_batchedUpdates
+                    (fn []
+                      (doseq [f updates]
+                        (f)))))))))
+
+(defn sub2 [k]
+  (let [initial-val (get @app-db k)
+        [result updateResult] (react/useState initial-val)]
+    (hooks/useEffect
+     (fn []
+       (swap! subscriptions update k (fn [sub]
+                                       (if sub
+                                         (conj sub updateResult)
+                                         #{updateResult})))
+       #(swap! subscriptions dissoc k))
+     #js [])
+    result))
 
 (def context (hx/create-context))
 
@@ -35,3 +70,18 @@
                             (assoc-in db path val))
                           db
                           (partition 2 path-vals)))))
+
+(defn useDimensions
+  "A hook that extracts the current window dimenions,
+   returns state that will update whenever the dimensions change"
+  []
+  (let [[dimensions setDimensions] (react/useState (js->clj (.get Dimensions "window")))
+        onChange (fn [^js obj]
+                   (println "dimensions change" obj)
+                   (setDimensions (js->clj (aget obj "window") :keywordize-keys true)))]
+    (hooks/useEffect
+     (fn []
+       (.addEventListener Dimensions "change" onChange)
+       #(.removeEventListener Dimensions "change" onChange))
+     #js [])
+    dimensions))

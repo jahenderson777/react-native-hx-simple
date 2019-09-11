@@ -11,7 +11,6 @@
     "name": "React Native Hx Simple Example",
     "entryPoint": "./app/index.js",
     "privacy": "public",
-    "orientation": "portrait",
     "icon": "./assets/icon.png",
     "version": "1.0.0",
     "updates": {
