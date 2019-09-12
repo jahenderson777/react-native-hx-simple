@@ -2,8 +2,9 @@
   (:require ["expo" :as ex]
             ["react-native" :refer [Slider Text View TouchableOpacity TextInput Button
                                     Dimensions Animated] :as rn]
-            ["react" :as react]
+            ["react" :refer [React] :as react]
             ["react-native-svg" :refer [Svg Circle]]
+            ["@welldone-software/why-did-you-render" :refer [whyDidYouRender]]
             [hx.react :refer [defnc] :as hx]
             [hx.hooks :as hooks]
             [shadow.expo :as expo]
@@ -11,7 +12,8 @@
             [react-native-hx-simple.db :refer [! sub sub2] :as db]
             [react-native-hx-simple.firebase :as fb]
             [react-native-hx-simple.util :as util]
-            [react-native-hx-simple.local-storage :as ls]))
+            [react-native-hx-simple.local-storage :as ls])
+  (:require-macros [react-native-hx-simple.macros :refer [defui]]))
 
 (defnc Greet []
   (let [name (sub :get-in :user :name)]
@@ -25,6 +27,7 @@
                  :keyboardType "default"
                  :value name
                  :onChangeText (fn [text] (! [:user :name] text))}]]))
+
 
 (defnc Button1 [{:keys [title on-press style]}]
   [TouchableOpacity {:style (merge {:margin 5
@@ -86,32 +89,39 @@
 
 (defnc MySvg [props]
   (println "MySvg" props)
-  [Svg {:height 200 :width 200}
-   [MyAnimatedCircle {:cx (sub2 :x) :cy (sub2 :y) :r 30 :fill "blue"}]])
+  [Text "MySvg"]
+  #_[Svg {:height 200 :width 200}
+   [MyAnimatedCircle {:cx 55;(sub2 :x)
+                      :cy 55 ;(sub2 :y)
+                      :r 30 :fill "blue"}]])
 
 (defnc MainPage [_]
-  (let [dimensions (db/useDimensions)
-        email (sub2 :user-email)
-        name (sub2 :user-name)
-        book-title (sub2 :book-title)
+  (let [;dimensions (db/useDimensions)
+        ;email (sub2 :user-email)
+        ;name (sub2 :user-name)
+        ;book-title (sub2 :book-title)
         max-val 1000
-        num-keys (or (sub2 :slider) 0)
-        maps-per-key (int (/ 1000 num-keys))]
+        [test updateTest] (react/useState 999)
+        num-keys 10 ;(or (sub2 :slider) 0)
+        maps-per-key (int (/ 1000 num-keys))
+        ]
     (println "MainPage render")
+   ; (def updateTest2 updateTest)
     [View {:style (s :pa4 :pt6)}
-     [Text "Hello6"]
+     [Text "Hello7"]
      [MySvg]
-     [Text name]
-     [Text email]
-     [Text book-title]
-     [Text (str dimensions)]
+     [Text test]
+     ;[Text name]
+     ;[Text email]
+     ;[Text book-title]
+     ;[Text (str dimensions)]
 
-     [Slider {:minimumValue 1
+     #_[Slider {:minimumValue 1
               :maximumValue max-val
               :step 10
               :value num-keys
               :onValueChange #(! [:slider] %)}]
-     [Text (str "num keys  = " num-keys "  maps/key =" maps-per-key)]
+     ;[Text (str "num keys  = " num-keys "  maps/key =" maps-per-key)]
      [Button1 {:on-press (fn [] (ls/write {:number-of-keys num-keys
                                           :maps-per-key maps-per-key
                                           :on-success #(! [:write-time] %)}))
@@ -149,21 +159,53 @@
                :title "Sign in with Facebook"
                :on-press #(fb/facebook-login!)}]]))
 
-(defnc App [_]
-  (let [user (sub2 :user-name)]
-    (println "user" user)
-    (cond (nil? user)
-          [SignIn]
 
-          :else
-          [MainPage])))
+
+(comment (defnc App [_]
+           [Foo]
+           #_(let [user true;(sub2 :user-name)
+                   ]
+               (println "user" user)
+               (cond (nil? user)
+                     [SignIn]
+
+                     :else
+                     [MainPage]))))
+
+(defn debug= [a b]
+  (println a b (identical? a b))
+  (identical? a b))
+
+(defui Baz [props]
+  (println "Rendered Baz" props)
+  (let [[test updateTest] (react/useState 999)]
+    (def bazUpdateTest updateTest)
+    [Text {:style (s :ma4 :f2)} (str "Baz" test)]))
+
+(defui Bar [props]
+  (println "Rendered Bar" props)
+  [View
+   [Baz {:b 1}]
+   [Text {:style (s :ma4 :f2)} "Bar2"]])
+
+
+(defui Foo [props]
+  (let [[test updateTest] (react/useState 999)]
+    (def updateTest2 updateTest)
+    (println "Rendered Foo2")
+    [View
+     [Text (str "foo" test)]
+     [Bar {:x 1}]]))
+
 
 (defn start {:dev/after-load true} []
-  (expo/render-root (hx/f [:provider db/provider [App]])))
+  (expo/render-root (hx/f [Foo {:a 1}])))
+
 
 (defn init []
   (start)
   (db/init!)
+  ;(whyDidYouUpdate react)
   (fb/init! (fn [user-info]
               (! [:user-email] (:email user-info)
                  [:user-name] (:name user-info)))))
