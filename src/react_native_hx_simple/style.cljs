@@ -285,9 +285,25 @@
          line-heights
          shadow))
 
-(defn s [m-or-k & ks]
-  (apply merge
-         (if (map? m-or-k)
-           m-or-k
-           (get tachyons m-or-k))
-         (map #(get tachyons %) ks)))
+#_(defn s [m & ks]
+  (let [opts-map? (map? m)]
+    (update (if opts-map?
+              m
+              {})
+            :style
+            (fn [style]
+              (apply merge style
+                     (map #(get tachyons %)
+                          (if opts-map?
+                            ks
+                            (rest ks))))))))
+
+(defn ^{:arglists '([& ks] [opts & ks])} s
+  ([] {})
+  ([opts & ks]
+   (if-not (map? opts)
+     (apply s {} opts ks)
+     (update opts :style
+             (fn [style]
+               (apply merge style
+                      (map #(get tachyons %) ks)))))))

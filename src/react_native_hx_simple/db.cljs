@@ -64,12 +64,22 @@
       #js [sub-v])
     result))
 
-(defn ! [& path-vals]
-  (swap! app-db (fn [db]
-                  (reduce (fn [db [path val]]
-                            (assoc-in db path val))
-                          db
-                          (partition 2 path-vals)))))
+
+
+(defmulti handle (fn [_ [k & _]] k))
+
+(defmethod handle :assoc [db [_ & path-vals]]
+  {:db (reduce (fn [db [path val]]
+                 (assoc-in db path val))
+               db
+               (partition 2 path-vals))})
+
+(defn ! [& evt]
+  (let [{:keys [db] :as ret} (handle @app-db (concat [:assoc] evt))]
+    (when (contains? ret :db)
+      (reset! app-db db))))
+
+
 
 (defn useDimensions
   "A hook that extracts the current window dimenions,
